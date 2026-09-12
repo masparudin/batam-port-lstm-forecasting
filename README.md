@@ -17,7 +17,7 @@ The repository contains the following datasets:
    - `GTKAPAL`: Gross Tonnage (Total internal volume of vessels) — **The Target Variable**.
 2. `data_libur_sekolah.xlsx`: The official mapping of the Indonesian Academic Calendar and the Joint Ministerial Decree (SKB 3 Menteri) for Eid al-Fitr dates from 2012–2025.
 
-## ⚙️ Repository Structure & Execution Pipeline
+##  Repository Structure & Execution Pipeline
 The Python scripts are strictly modular to represent the step-by-step zero-leakage pipeline. Run them in the following order:
 
 * **`01_data_aggregation.py`**
