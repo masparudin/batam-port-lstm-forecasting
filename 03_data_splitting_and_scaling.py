@@ -5,36 +5,36 @@ import numpy as np
 
 def main():
     print("Memulai proses Splitting dan Scaling (Strict No-Leakage Protocol)...")
-    # Baca data hasil tahapan 2
+    # Read output data from step 2
     df = pd.read_excel('02_featured_data_final.xlsx')
     
-    # data diurutkan berdasarkan tanggal
+    # Sort data chronologically by date
     df = df.sort_values('Date').reset_index(drop=True)
     
-    # Splitting Data (Batas: Akhir 2023)
+    # Data splitting (Cutoff: End of 2023)
     train_mask = df['Date'] <= '2023-12-31'
     test_mask = df['Date'] >= '2024-01-01'
     
     df_train = df[train_mask].copy()
     df_test = df[test_mask].copy()
     
-    # Inisialisasi Scaler HANYA untuk variabel target (GTKAPAL)
-    # Fitur kalender (0 dan 1) TIDAK PERLU di-scale
+    # Initialize Scaler ONLY for the target variable (GTKAPAL)
+    # Calendar features remain binary (0 and 1)
     scaler_gt = MinMaxScaler()
     
-    # FIT & TRANSFORM pada data training
+    # FIT & TRANSFORM on training data
     df_train['GT_Scaled'] = scaler_gt.fit_transform(df_train[['GTKAPAL']])
     
-    # TRANSFORM SAJA pada data testing (menggunakan parameter dari training)
+    # TRANSFORM ONLY on testing data (using learned parameters from training)
     df_test['GT_Scaled'] = scaler_gt.transform(df_test[['GTKAPAL']])
     
-    # Simpan dataset yang sudah siap masuk ke tahap pemodelan
+    # Save datasets prepared for the modeling phase
     with pd.ExcelWriter('03_model_ready_data.xlsx') as writer:
         df_train.to_excel(writer, sheet_name='Train', index=False)
         df_test.to_excel(writer, sheet_name='Test', index=False)
         
-    # Simpan objek scaler untuk mengembalikan (inverse) nilai prediksi nanti 
-    # agar bisa dihitung RMSE, MAE, dan MAPE-nya dalam satuan asli (GT)
+    # Save the scaler object to inverse-transform predictions later,
+    # enabling RMSE, MAE, and MAPE evaluation in original units (GT)
     with open('scaler_gt.pkl', 'wb') as f:
         pickle.dump(scaler_gt, f)
         

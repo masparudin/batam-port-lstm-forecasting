@@ -4,21 +4,21 @@ def main():
     print("Membaca raw dataset...")
     df_raw = pd.read_excel('dataset_batam_port.xlsx')
     
-    # Filter data mulai dari 1 Januari 2012 untuk menghindari structural break sebelum 2012
+    # Filter data starting from January 1, 2012 to avoid structural breaks prior to 2012
     df_filtered = df_raw[df_raw['TGLAWAL'] >= '2012-01-01'].copy()
     
-    # Ekstrak Tahun dan Bulan
+    # Extract Year and Month
     df_filtered['Year'] = df_filtered['TGLAWAL'].dt.year
     df_filtered['Month'] = df_filtered['TGLAWAL'].dt.month
     
-    # Agregasi total GTKAPAL bulanan dari seluruh pelabuhan di Batam
+    # Aggregate total monthly GTKAPAL across all ports in Batam
     df_agg = df_filtered.groupby(['Year', 'Month'])['GTKAPAL'].sum().reset_index()
     
-    # Buat kolom Date untuk indexing time-series
+    # Create Date column for time-series indexing
     df_agg['Date'] = pd.to_datetime(df_agg[['Year', 'Month']].assign(DAY=1))
     df_agg = df_agg.sort_values('Date').reset_index(drop=True)
     
-    # Simpan hasil tahap 1
+    # Save Step 1 results
     output_file = '01_aggregated_data.xlsx'
     df_agg.to_excel(output_file, index=False)
     print(f"Berhasil! Data agregasi (n={len(df_agg)} bulan) disimpan di '{output_file}'")

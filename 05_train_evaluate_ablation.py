@@ -9,7 +9,6 @@ from tensorflow.keras.regularizers import l2
 import pickle
 import random
 
-# Mematikan warning TF yang mengganggu di layar
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # ==========================================
@@ -33,7 +32,7 @@ with open('scaler_gt.pkl', 'rb') as f:
 
 # Hyperparameter
 lookback = 12
-lstm_units = 32 # Diturunkan dari 50 untuk menjawab Major Comment #5 (Overfitting)
+lstm_units = 32  # Reduced from 50 to address Major Comment #5 (Overfitting)
 
 def create_sequences(df, lookback):
     X_hist, X_sit, y = [], [], []
@@ -43,7 +42,7 @@ def create_sequences(df, lookback):
         y.append(df['GT_Scaled'].iloc[i])
     return np.array(X_hist).reshape(-1, lookback, 1), np.array(X_sit), np.array(y)
 
-# Menggabungkan data untuk membuat sequence test set dengan utuh
+# Concatenate datasets to construct unbroken test sequence windows
 full_df = pd.concat([df_train, df_test]).reset_index(drop=True)
 X_hist_all, X_sit_all, y_all = create_sequences(full_df, lookback)
 
@@ -55,7 +54,7 @@ actual_y = df_test['GTKAPAL'].values
 # ==========================================
 # 3. BENCHMARK 1: SEASONAL NAIVE (Comment #1)
 # ==========================================
-# Prediksi GT bulan ini adalah sama dengan GT pada bulan yang sama tahun lalu (t-12)
+# The GT forecast for current month equals GT from the same month of the previous year (t-12)
 naive_pred = full_df['GTKAPAL'].values[len(df_train)-lookback : len(full_df)-lookback]
 
 # ==========================================
@@ -89,7 +88,7 @@ pred_multi_scaled = model_multi.predict([X_hist_test, X_sit_test], verbose=0).fl
 pred_multi = scaler.inverse_transform(pred_multi_scaled.reshape(-1, 1)).flatten()
 
 # ==========================================
-# 6. EVALUASI METRIK
+# 6. METRIC EVALUATION
 # ==========================================
 def hitung_metrik(y_true, y_pred, nama_model):
     mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
@@ -108,7 +107,7 @@ hitung_metrik(actual_y, naive_pred, "1. Seasonal Naive (Benchmark Baru)")
 hitung_metrik(actual_y, pred_uni, "2. Univariate LSTM (Tanpa Fitur Libur)")
 hitung_metrik(actual_y, pred_multi, "3. Multivariate LSTM (Proposed Model)")
 
-# Simpan prediksi untuk digambar di grafik Excel/Python nantinya
+# Save predictions for plotting in Excel/Python later
 df_test_results = df_test.copy()
 df_test_results['Pred_Seasonal_Naive'] = naive_pred
 df_test_results['Pred_Uni_LSTM'] = pred_uni

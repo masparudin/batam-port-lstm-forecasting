@@ -8,15 +8,15 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # ==========================================
-# 1. FUNGSI DIEBOLD-MARIANO TEST
+# 1. DIEBOLD-MARIANO TEST FUNCTION
 # ==========================================
 def diebold_mariano_test(actual, pred1, pred2, h=1):
     """
-    Menghitung uji statistik Diebold-Mariano.
-    H0: Model 1 dan Model 2 memiliki tingkat akurasi yang sama.
-    H1: Model 2 (Proposed) memiliki tingkat akurasi yang berbeda/lebih baik.
+    Computes the Diebold-Mariano statistical test.
+    H0: Model 1 and Model 2 have equal forecast accuracy.
+    H1: Model 2 (Proposed) has significantly different/superior accuracy.
     """
-    # Menggunakan Squared Error Loss
+    # Using Squared Error Loss
     e1 = actual - pred1
     e2 = actual - pred2
     d = (e1 ** 2) - (e2 ** 2)
@@ -47,9 +47,9 @@ def main():
     print("Mempersiapkan Benchmark Machine Learning (XGBoost) & DM Test...")
     
     # ==========================================
-    # 2. PERSIAPAN DATA UNTUK XGBOOST (Menjawab Comment #2)
+    # 2. DATA PREPARATION FOR XGBOOST
     # ==========================================
-    # Load dataset yang sudah siap
+    # Load model-ready dataset
     df_train = pd.read_excel('03_model_ready_data.xlsx', sheet_name='Train')
     df_test = pd.read_excel('03_model_ready_data.xlsx', sheet_name='Test')
     full_df = pd.concat([df_train, df_test]).reset_index(drop=True)
@@ -59,15 +59,15 @@ def main():
         
     lookback = 12
     
-    # Fungsi ekstraksi fitur tabular untuk XGBoost
+    # Tabular feature extraction function for XGBoost
     def create_tabular_features(df, lookback):
         X, y = [], []
         for i in range(lookback, len(df)):
-            # 12 Bulan Historis
+            # 12 Historical Months
             hist = df['GT_Scaled'].iloc[i-lookback:i].values
-            # 4 Fitur Liburan (Calendar)
+            # 4 Holiday Features (Calendar Variables)
             sit = df[['Eid_Actual', 'Eid_Lead', 'School_Holiday', 'Xmas_NewYear']].iloc[i].values
-            # Gabungkan (Concatenate) menjadi 1 baris untuk XGBoost
+            # Concatenate into a single feature row for XGBoost
             X.append(np.concatenate([hist, sit]))
             y.append(df['GT_Scaled'].iloc[i])
         return np.array(X), np.array(y)
@@ -80,30 +80,30 @@ def main():
     actual_y = df_test['GTKAPAL'].values
     
     # ==========================================
-    # 3. TRAINING XGBOOST MODEL
+    # 3. XGBOOST MODEL TRAINING
     # ==========================================
     print("\nMelatih model XGBoost...")
-    # Parameter standar dan random_state untuk reproducibility
+    # Standard parameters and random_state for reproducibility
     model_xgb = xgb.XGBRegressor(n_estimators=100, max_depth=3, learning_rate=0.1, random_state=42)
     model_xgb.fit(X_train, y_train)
     
     pred_xgb_scaled = model_xgb.predict(X_test)
     pred_xgb = scaler.inverse_transform(pred_xgb_scaled.reshape(-1, 1)).flatten()
     
-    # Hitung metrik XGBoost
+    # Evaluate XGBoost metrics
     mape_xgb = np.mean(np.abs((actual_y - pred_xgb) / actual_y)) * 100
     rmse_xgb = np.sqrt(mean_squared_error(actual_y, pred_xgb))
     print(f"XGBoost MAPE : {mape_xgb:.2f}%")
     print(f"XGBoost RMSE : {rmse_xgb:.2f}")
 
     # ==========================================
-    # 4. LOAD PREDIKSI LSTM SEBELUMNYA
+    # 4. LOAD PRIOR LSTM PREDICTIONS
     # ==========================================
-    # Load hasil prediksi yang disimpan di Tahap 4
+    # Load forecast results saved in Step 4/5
     df_preds = pd.read_excel('04_final_predictions.xlsx')
     pred_naive = df_preds['Pred_Seasonal_Naive'].values
     pred_uni = df_preds['Pred_Uni_LSTM'].values
-    pred_multi = df_preds['Pred_Multi_LSTM'].values #Proposed Model
+    pred_multi = df_preds['Pred_Multi_LSTM'].values  # Proposed Model
     
     # ==========================================
     # 5. DIEBOLD-MARIANO TEST

@@ -1,6 +1,6 @@
 import pandas as pd
 
-# 1. Pemetaan Idul Fitri (Logika Mudik & SKB 3 Menteri)
+# 1. Eid al-Fitr Mapping (Mudik Logic & Joint Ministerial Decree / SKB 3 Menteri)
 eid_mapping = {
     2012: {'actual': [8], 'lead': []}, 2013: {'actual': [8], 'lead': [7]},
     2014: {'actual': [7], 'lead': []}, 2015: {'actual': [7], 'lead': []},
@@ -11,24 +11,24 @@ eid_mapping = {
     2024: {'actual': [4], 'lead': [3]}, 2025: {'actual': [3, 4], 'lead': [3]} 
 }
 
-# 2. Pemetaan Libur Sekolah (SANGAT PRESISI berdasarkan data_libur_sekolah.xlsx)
-# Menggabungkan Libur Akhir Tahun (Jun-Jul), Libur Semester (Des), 
-# dan pergeseran Libur Idul Fitri spesifik untuk siswa.
+# 2. School Holiday Mapping (HIGH-PRECISION based on data_libur_sekolah.xlsx)
+# Combines Year-End Holidays (Jun-Jul), Semester Break (Dec), 
+# and specific shifting Eid al-Fitr school breaks.
 school_mapping = {
-    2012: [6, 7, 8, 12],       # + Agustus (Libur Idul Fitri Sekolah)
-    2013: [6, 7, 8, 12],       # + Agustus (Libur Idul Fitri Sekolah)
-    2014: [6, 7, 8, 12],       # + Juli-Agustus (Libur Idul Fitri Sekolah)
-    2015: [6, 7, 12],          # Idul Fitri beririsan di Juli
-    2016: [6, 7, 12],          # Beririsan
-    2017: [6, 7, 12],          # Beririsan
-    2018: [6, 7, 12],          # Beririsan
-    2019: [5, 6, 7, 12],       # + Mei (Libur Idul Fitri Sekolah)
-    2020: [5, 6, 7, 12],       # + Mei (COVID-19 BDR dimulai, tapi libur resmi di Mei)
-    2021: [5, 6, 7, 12],       # + Mei (Libur Idul Fitri Sekolah)
-    2022: [4, 5, 6, 7, 12],    # + April-Mei (Libur Idul Fitri Sekolah)
-    2023: [4, 6, 7, 12],       # + April (Libur Idul Fitri Sekolah)
-    2024: [4, 6, 7, 12],       # + April (Libur Idul Fitri Sekolah)
-    2025: [3, 4, 6, 7, 12]     # + Maret-April (Libur Idul Fitri Sekolah)
+    2012: [6, 7, 8, 12],       # + August (School Eid Holiday)
+    2013: [6, 7, 8, 12],       # + August (School Eid Holiday)
+    2014: [6, 7, 8, 12],       # + July-August (School Eid Holiday)
+    2015: [6, 7, 12],          # Eid al-Fitr overlaps in July
+    2016: [6, 7, 12],          # Overlapping
+    2017: [6, 7, 12],          # Overlapping
+    2018: [6, 7, 12],          # Overlapping
+    2019: [5, 6, 7, 12],       # + May (School Eid Holiday)
+    2020: [5, 6, 7, 12],       # + May (COVID-19 remote learning began, but official holiday fell in May)
+    2021: [5, 6, 7, 12],       # + May (School Eid Holiday)
+    2022: [4, 5, 6, 7, 12],    # + April-May (School Eid Holiday)
+    2023: [4, 6, 7, 12],       # + April (School Eid Holiday)
+    2024: [4, 6, 7, 12],       # + April (School Eid Holiday)
+    2025: [3, 4, 6, 7, 12]     # + March-April (School Eid Holiday)
 }
 
 def get_eid_actual(row):
@@ -38,19 +38,19 @@ def get_eid_lead(row):
     return 1 if row['Month'] in eid_mapping.get(row['Year'], {}).get('lead', []) else 0
 
 def get_school_holiday(row):
-    # Mengambil list bulan libur spesifik tahun tersebut (jika tidak ada, gunakan default 6,7,12)
+    # Retrieve the specific holiday month list for the year (default to 6, 7, 12 if not found)
     active_months = school_mapping.get(row['Year'], [6, 7, 12])
     return 1 if row['Month'] in active_months else 0
 
 def get_xmas_newyear(row):
-    # Validasi sesuai data: Desember - Januari (Jeda Semester)
+    # Validate according to data: December - January (Semester Break)
     return 1 if row['Month'] in [12, 1] else 0
 
 def main():
     print("Memproses feature engineering (SINKRONISASI DATA LIBUR SEKOLAH)...")
     df = pd.read_excel('01_aggregated_data.xlsx')
     
-    # Injeksi fitur kalender 
+    # Inject calendar features
     df['Eid_Actual'] = df.apply(get_eid_actual, axis=1)
     df['Eid_Lead'] = df.apply(get_eid_lead, axis=1)
     df['School_Holiday'] = df.apply(get_school_holiday, axis=1)
